@@ -76,6 +76,7 @@ tv_target_folder / movie_target_folder：Emby 媒体库目录
 （可选）如需 AI 功能，填写 ai_parser.api_key 和 ai_plot_enhance.api_key，并将 enabled 设为 true
 
 5.**启动 Web 服务**
+
  python web_app.py
 访问 http://127.0.0.1:5000 
        享受丝滑的视觉化操作！
