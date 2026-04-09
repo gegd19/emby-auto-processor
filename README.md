@@ -78,6 +78,7 @@ tv_target_folder / movie_target_folder：Emby 媒体库目录
 5.**启动 Web 服务**
 
  python web_app.py
+ 
 访问 http://127.0.0.1:5000 
        享受丝滑的视觉化操作！
 
