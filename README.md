@@ -75,7 +75,7 @@ source .venv/bin/activate
    
    pip install -r requirements.txt
 
-5. **准备配置文件**
+4. **准备配置文件**
 
 
    # Windows PowerShell
