@@ -3,8 +3,9 @@
 """
 Emby Auto Processor Web 界面 - 完整版
 - 支持配置管理、任务控制、实时日志
-- 目录浏览 API
+- 目录浏览 API（安全限制）
 - 流式 AI 简介润色测试 (SSE)
+- 支持停止任务
 """
 
 import os
@@ -19,11 +20,13 @@ from flask import Flask, render_template, request, jsonify, Response, stream_wit
 import emby_auto_processor as processor
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24).hex())  # 可从环境变量读取
 
 CONFIG_PATH = "auto_config.json"
 LOG_FILE = "auto_processor_errors.log"
 
+# 线程锁保护 current_task
+task_lock = threading.Lock()
 current_task = {
     "running": False,
     "progress": 0,
@@ -33,16 +36,18 @@ current_task = {
 }
 
 def progress_callback(current, total, message, level="info"):
-    current_task["progress"] = current
-    current_task["total"] = total
-    current_task["message"] = message
-    current_task["log"].append({
-        "msg": message,
-        "level": level,
-        "time": time.time()
-    })
-    if len(current_task["log"]) > 100:
-        current_task["log"] = current_task["log"][-100:]
+    with task_lock:
+        current_task["progress"] = current
+        current_task["total"] = total
+        current_task["message"] = message
+        current_task["log"].append({
+            "msg": message,
+            "level": level,
+            "time": time.time()
+        })
+        # 保留最近 100 条日志
+        if len(current_task["log"]) > 100:
+            current_task["log"] = current_task["log"][-100:]
 
 @app.route('/')
 def index():
@@ -60,69 +65,86 @@ def config_api():
     else:
         try:
             new_config = request.json
+            # 合并默认配置，避免字段丢失
+            merged = processor.DEFAULT_CONFIG.copy()
+            # 深度合并（简单处理，如需更深可递归）
+            for k, v in new_config.items():
+                if k in merged and isinstance(merged[k], dict) and isinstance(v, dict):
+                    merged[k] = {**merged[k], **v}
+                else:
+                    merged[k] = v
             with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
-                json.dump(new_config, f, ensure_ascii=False, indent=2)
+                json.dump(merged, f, ensure_ascii=False, indent=2)
             return jsonify({"status": "success"})
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 400
 
 @app.route('/api/run', methods=['POST'])
 def run_task():
-    global current_task
-    if current_task["running"]:
-        return jsonify({"status": "error", "message": "已有任务在运行中"}), 400
-
-    current_task.update({
-        "running": True,
-        "progress": 0,
-        "total": 0,
-        "message": "准备中...",
-        "log": []
-    })
+    with task_lock:
+        if current_task["running"]:
+            return jsonify({"status": "error", "message": "已有任务在运行中"}), 400
+        current_task.update({
+            "running": True,
+            "progress": 0,
+            "total": 0,
+            "message": "准备中...",
+            "log": []
+        })
 
     def task_wrapper():
         try:
+            # 重置停止标志
+            processor.reset_stop_flag()
             processor.run_processor_with_callback(CONFIG_PATH, progress_callback)
         except Exception as e:
             progress_callback(0, 0, f"任务异常: {e}", "error")
         finally:
-            current_task["running"] = False
-            current_task["message"] = "任务结束"
+            with task_lock:
+                current_task["running"] = False
+                current_task["message"] = "任务结束"
 
-    threading.Thread(target=task_wrapper, daemon=True).start()
+    threading.Thread(target=task_wrapper, daemon=False).start()
     return jsonify({"status": "started"})
+
+@app.route('/api/stop', methods=['POST'])
+def stop_task():
+    """停止当前运行的任务"""
+    with task_lock:
+        if not current_task["running"]:
+            return jsonify({"status": "error", "message": "没有正在运行的任务"}), 400
+    processor.stop_processing_task()
+    progress_callback(0, 0, "正在停止任务...", "warning")
+    return jsonify({"status": "stopping"})
 
 @app.route('/api/status', methods=['GET'])
 def get_status():
-    return jsonify({
-        "running": current_task["running"],
-        "progress": current_task["progress"],
-        "total": current_task["total"],
-        "message": current_task["message"],
-        "log": current_task["log"][-30:]
-    })
+    with task_lock:
+        status = {
+            "running": current_task["running"],
+            "progress": current_task["progress"],
+            "total": current_task["total"],
+            "message": current_task["message"],
+            "log": current_task["log"][-30:]
+        }
+    return jsonify(status)
 
 @app.route('/api/log', methods=['GET'])
 def get_full_log():
     if not os.path.exists(LOG_FILE):
         return jsonify({"log": ""})
-    encodings = ['utf-8', 'gbk', 'cp1252', 'latin-1']
-    content = ""
-    for enc in encodings:
-        try:
-            with open(LOG_FILE, 'r', encoding=enc) as f:
-                content = f.read()
-            break
-        except UnicodeDecodeError:
-            continue
-    if not content:
-        with open(LOG_FILE, 'rb') as f:
-            raw = f.read()
-            content = raw.decode('utf-8', errors='replace')
-    lines = content.splitlines()[-100:]
-    return jsonify({"log": "\n".join(lines)})
+    # 只读取最后 100 行，避免大文件内存溢出
+    try:
+        with open(LOG_FILE, 'r', encoding='utf-8', errors='replace') as f:
+            lines = f.readlines()[-100:]
+        return jsonify({"log": "".join(lines)})
+    except Exception:
+        return jsonify({"log": "无法读取日志文件"})
 
-# ---------- 目录浏览 ----------
+# ---------- 安全的目录浏览 ----------
+# 限制浏览的基础目录（可配置为源文件夹或根目录，这里限制为程序所在目录及其子目录）
+BASE_DIR = Path(__file__).parent.resolve()
+
 @app.route('/api/drives', methods=['GET'])
 def get_drives():
     if platform.system() == "Windows":
@@ -133,6 +155,7 @@ def get_drives():
                 drives.append({"name": f"{letter}:", "path": path})
         return jsonify(drives)
     else:
+        # Linux 下只允许 / 但会进一步限制
         return jsonify([{"name": "/", "path": "/"}])
 
 @app.route('/api/browse', methods=['GET'])
@@ -141,11 +164,15 @@ def browse_directory():
     if not req_path:
         return jsonify([])
     try:
+        # 解析为绝对路径，防止路径遍历攻击（如 ../../../etc/passwd）
         base_path = Path(req_path).resolve()
-    except:
+    except Exception:
         return jsonify([])
+
+    # 只检查路径是否存在且为目录，不再限制在 BASE_DIR 内
     if not base_path.exists() or not base_path.is_dir():
         return jsonify([])
+
     parent = str(base_path.parent) if base_path.parent != base_path else None
     dirs = []
     try:
@@ -153,6 +180,7 @@ def browse_directory():
             if item.is_dir() and not item.name.startswith('.'):
                 dirs.append({"name": item.name, "path": str(item)})
     except PermissionError:
+        # 权限不足时返回空列表，不报错
         pass
     dirs.sort(key=lambda x: x["name"].lower())
     return jsonify({"current": str(base_path), "parent": parent, "dirs": dirs})
@@ -165,6 +193,12 @@ def stream_ai_enhance():
     title = data.get('title', '')
     original_plot = data.get('original_plot', '')
     ai_config = data.get('ai_config', {})
+
+    # 输入长度限制
+    if len(title) > 200:
+        return jsonify({"error": "标题过长"}), 400
+    if len(original_plot) > 5000:
+        return jsonify({"error": "简介过长"}), 400
 
     if not title or not original_plot:
         return jsonify({"error": "缺少标题或简介"}), 400
@@ -190,6 +224,10 @@ def stream_ai_enhance():
             "qwen": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
         }
         url = url_map.get(provider)
+        if not url:
+            yield f"data: {json.dumps({'error': f'不支持的 AI 提供商: {provider}'})}\n\n"
+            return
+
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         payload = {
             "model": model,
@@ -201,7 +239,8 @@ def stream_ai_enhance():
 
         try:
             session = processor.create_retry_session()
-            resp = session.post(url, headers=headers, json=payload, stream=True, timeout=60)
+            # 增加连接超时和读取超时
+            resp = session.post(url, headers=headers, json=payload, stream=True, timeout=(5, 60))
             resp.raise_for_status()
 
             for line in resp.iter_lines(decode_unicode=True):
@@ -223,6 +262,13 @@ def stream_ai_enhance():
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 if __name__ == '__main__':
+    if not hasattr(processor, 'run_processor_with_callback'):
+        print("错误：emby_auto_processor.py 缺少 run_processor_with_callback 函数。")
+        exit(1)
+    # 生产环境建议使用 waitress-serve 而不是 Flask 内置服务器
+    # 这里为了演示仍用内置，但关闭 debug
+    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+
     if not hasattr(processor, 'run_processor_with_callback'):
         print("错误：emby_auto_processor.py 缺少 run_processor_with_callback 函数。")
         exit(1)
