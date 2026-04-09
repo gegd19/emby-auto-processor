@@ -57,10 +57,16 @@
 2.**创建并激活虚拟环境（推荐）**
  ## Windows PowerShell
 python -m venv .venv
+
+cmd
+
+
 .venv\Scripts\Activate.ps1
 
 ## Linux / macOS
 python3 -m venv .venv
+
+
 source .venv/bin/activate
 3.  **安装依赖** 
    pip install -r requirements.txt
