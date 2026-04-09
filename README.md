@@ -68,17 +68,22 @@ python3 -m venv .venv
 
 
 source .venv/bin/activate
+
+
 3.  **安装依赖** 
    pip install -r requirements.txt
 
 4. **准备配置文件**
    # Windows PowerShell
+   
 Copy-Item auto_config.example.json auto_config.json
 
 ## Linux / macOS
+
 cp auto_config.example.json auto_config.json
  
 5. **编辑 auto_config.json**
+   
 用文本编辑器打开 auto_config.json，填入：
 
 tmdb_api.api_key：你的 TMDB API 密钥（必填）
