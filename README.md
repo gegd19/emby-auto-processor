@@ -1,4 +1,4 @@
-# 🎬 Emby Auto Processor —— 你的全自动 AI 媒体库管家 #
+*Emby Auto Processor — 你的全自动 AI 媒体库管家*
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -10,9 +10,9 @@
 
 ---
 
-## ✨ 为什么选择它？—— 三大核心优势
+** ✨ 为什么选择它？—— 三大核心优势 **
 
-## 🚀 创新性：AI 深度赋能，不只是重命名
+** 🚀 创新性：AI 深度赋能，不只是重命名 **
 - **智能媒体识别**：内置 AI + 正则双引擎，自动判断文件是**电影**还是**剧集**，并提取准确名称、年份、季集号。告别复杂的命名规则。
 - **剧情简介润色**：接入 DeepSeek / OpenAI 等大模型，将 TMDB 的平淡简介改写为**悬念迭起、引人入胜**的文案。Web 界面支持**流式预览**，实时感受 AI 的文字魅力。
 - **流式交互体验**：首创在媒体整理工具中集成 SSE 流式传输，AI 改写过程逐字呈现，科技感拉满。
