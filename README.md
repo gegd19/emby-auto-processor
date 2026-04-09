@@ -63,7 +63,8 @@
 
 4.**启动 Web 服务**
 
-   访问 http://127.0.0.1:5000，享受丝滑的视觉化操作！
+   访问 http://127.0.0.1:5000 
+       享受丝滑的视觉化操作！
 
   💡  命令行模式：如果你不需要 Web 界面，可以直接运行 python emby_auto_processor.py --help 查看参数，或直接执行 python emby_auto_processor.py 开始处理。
 
