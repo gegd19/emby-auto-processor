@@ -1,0 +1,56 @@
+{
+  "source_folders": [
+    "D:/moive"
+  ],
+  "target_folder": "D:/Emby_Media/TV Shows",
+  "movie_target_folder": "D:/Emby_Media/Movies",
+  "video_extensions": [
+    ".mkv",
+    ".mp4",
+    ".avi",
+    ".ts",
+    ".m2ts",
+    ".mov",
+    ".wmv",
+    ".flv"
+  ],
+  "link_type": "hard",
+  "ignore_patterns": [
+    "sample",
+    "trailer",
+    "extra"
+  ],
+  "min_file_size_mb": 50,
+  "dry_run": false,
+  "add_year_to_folder": true,
+  "force_chinese_show_name": true,
+  "incremental": true,
+  "max_workers": 5,
+  "download_images": true,
+  "image_base_url": "https://image.tmdb.org/t/p/original",
+  "tmdb_api": {
+    "api_key": "YOUR_TMDB_API_KEY",
+    "language": "zh-CN"
+  },
+  "ai_parser": {
+    "enabled": true,
+    "provider": "deepseek",
+    "api_key": "YOUR_API_KEY",
+    "model": "deepseek-chat",
+    "base_url": "https://api.deepseek.com",
+    "temperature": 0.1,
+    "max_tokens": 300,
+    "timeout": 20
+  },
+  "ai_plot_enhance": {
+    "enabled": true,
+    "provider": "deepseek",
+    "api_key": "YOUR_API_KEY",
+    "model": "deepseek-chat",
+    "base_url": "https://api.deepseek.com",
+    "temperature": 0.7,
+    "max_tokens": 500,
+    "timeout": 30,
+    "prompt_template": "你是一个专业的新闻专业博士。请将以下剧集简介修改并且得更加生动、吸引人，语言流畅自然，可以适当增加一些悬念和感染力。请直接输出改写后的简介，不要添加额外说明。\n\n原标题：{title}\n原简介：{original_plot}\n\n优化后简介："
+  }
+}
