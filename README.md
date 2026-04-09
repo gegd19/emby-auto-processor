@@ -58,12 +58,26 @@
    pip install -r requirements.txt
 
 3. **准备配置文件**
-   cp auto_config.example.json auto_config.json
-  ## 编辑 auto_config.json，填入你的 TMDB API Key 和文件夹路径
+   # Windows PowerShell
+Copy-Item auto_config.example.json auto_config.json
 
-4.**启动 Web 服务**
+# Linux / macOS
+cp auto_config.example.json auto_config.json
+ 
+4. **编辑 auto_config.json**
+用文本编辑器打开 auto_config.json，填入：
 
-   访问 http://127.0.0.1:5000 
+tmdb_api.api_key：你的 TMDB API 密钥（必填）
+
+source_folders：视频存放的源文件夹路径
+
+tv_target_folder / movie_target_folder：Emby 媒体库目录
+
+（可选）如需 AI 功能，填写 ai_parser.api_key 和 ai_plot_enhance.api_key，并将 enabled 设为 true
+
+5.**启动 Web 服务**
+ python web_app.py
+访问 http://127.0.0.1:5000 
        享受丝滑的视觉化操作！
 
   💡  命令行模式：如果你不需要 Web 界面，可以直接运行 python emby_auto_processor.py --help 查看参数，或直接执行 python emby_auto_processor.py 开始处理。
