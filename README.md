@@ -70,10 +70,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 
-3.  **安装依赖** 
+3.  **安装依赖**
+
+   
    pip install -r requirements.txt
 
-4. **准备配置文件**
+5. **准备配置文件**
+
+
    # Windows PowerShell
    
 Copy-Item auto_config.example.json auto_config.json
