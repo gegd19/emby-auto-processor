@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emby Auto Processor · 全能控制面板</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            margin: 20px;
+            background: #f5f7fb;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+        }
+        h1 { margin-top: 0; color: #1a1e2b; display: flex; align-items: center; gap: 10px; }
+        h2 { font-size: 1.4rem; color: #2c3e50; margin: 25px 0 15px; border-bottom: 1px solid #e9ecef; padding-bottom: 8px; }
+        h3 { font-size: 1.1rem; color: #495057; margin: 15px 0 10px; }
+        button {
+            background: #2c7be5;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 8px;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        button:hover { background: #1a5bbf; }
+        button:disabled { background: #c0c4cc; cursor: not-allowed; }
+        button.secondary { background: #6c757d; }
+        button.secondary:hover { background: #545b62; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
+        button.browse { background: #5a6d80; }
+        .progress-bar {
+            width: 100%; background: #e9ecef; border-radius: 30px;
+            margin: 20px 0; height: 34px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #2c7be5, #00b4d8);
+            width: 0%; transition: width 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold;
+        }
+        .log-box {
+            background: #1a1e2b; color: #e3e8f0; padding: 15px;
+            border-radius: 10px; height: 250px; overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace; font-size: 13px;
+            margin: 20px 0;
+        }
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: #fafbfc;
+            border-radius: 12px;
+            padding: 15px 20px;
+            border: 1px solid #e9ecef;
+        }
+        .field-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .field-row label {
+            width: 130px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        .field-row input, .field-row select {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .field-row input[type="checkbox"] {
+            flex: 0;
+            width: 20px;
+            height: 20px;
+            margin-left: 0;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .path-input-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+        .path-input-group input {
+            flex: 1;
+        }
+        .api-section {
+            background: #eef2ff;
+            border-left: 4px solid #2c7be5;
+        }
+        .note {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            width: 600px;
+            max-height: 70vh;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+        }
+        .modal-body {
+            padding: 15px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .dir-list {
+            list-style: none;
+            padding: 0;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .dir-list li {
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .dir-list li:hover { background: #e7f1ff; }
+        .folder-icon { margin-right: 10px; }
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        hr { margin: 20px 0; border: 0; border-top: 1px solid #dee2e6; }
+        .stream-card {
+            background: #f0f4ff;
+            border-left: 4px solid #845ef7;
+        }
+        .stream-output {
+            background: #1a1e2b;
+            color: #51cf66;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 80px;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎬 Emby 全自动入库 · 全能控制面板</h1>
+
+    <div class="status">
+        <span id="statusText">⚪ 空闲</span>
+    </div>
+
+    <div class="action-bar">
+        <button id="runBtn" onclick="startTask()">▶ 开始处理</button>
+        <button class="secondary" onclick="location.reload()">🔄 刷新</button>
+        <button class="success" onclick="saveConfig()">💾 保存配置</button>
+        <button class="secondary" onclick="viewFullLog()">📄 完整日志</button>
+    </div>
+
+    <div class="progress-bar">
+        <div id="progressFill" class="progress-fill" style="width:0%">0%</div>
+    </div>
+
+    <div class="log-box" id="logBox">
+        <div style="color:#8a95a5;">✨ 准备就绪</div>
+    </div>
+
+    <!-- 流式测试卡片 -->
+    <div class="card stream-card">
+        <h3>✨ AI 简介润色 · 流式测试</h3>
+        <div class="field-row">
+            <label>标题</label>
+            <input type="text" id="testTitle" placeholder="例如：权力的游戏" value="龙族">
+        </div>
+        <div class="field-row">
+            <label>原始简介</label>
+            <textarea id="testPlot" rows="3" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ced4da;">少年楚子航觉醒龙族血脉，手持村雨踏上屠龙之路。</textarea>
+        </div>
+        <div style="display: flex; gap: 10px; margin: 10px 0;">
+            <button onclick="startStreamEnhance()">🤖 开始流式生成</button>
+            <button onclick="copyStreamResult()">📋 复制结果</button>
+        </div>
+        <div class="stream-output" id="streamOutput"></div>
+        <div class="note">💡 AI 会逐字生成，生成完毕文字将保留。</div>
+    </div>
+
+    <h2>⚙️ 配置面板</h2>
+    <form id="configForm">
+        <div class="config-grid">
+            <div class="card">
+                <h3>📁 路径设置</h3>
+                <div class="field-row">
+                    <label>源文件夹</label>
+                    <div class="path-input-group">
+                        <input type="text" id="sourceFoldersInput" placeholder="多个用逗号分隔">
+                        <button type="button" class="browse" onclick="openBrowser('source')">浏览</button>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>剧集目标</label>
+                    <div class="path-input-group">
+                        <input type="text" id="tvTargetFolderInput" placeholder="Emby 剧集库根目录">
+                        <button type="button" class="browse" onclick="openBrowser('tv_target')">浏览</button>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>电影目标</label>
+                    <div class="path-input-group">
+                        <input type="text" id="movieTargetFolderInput" placeholder="Emby 电影库根目录">
+                        <button type="button" class="browse" onclick="openBrowser('movie_target')">浏览</button>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <label>链接类型</label>
+                    <select id="linkTypeSelect">
+                        <option value="hard">硬链接 (同盘)</option>
+                        <option value="symlink">符号链接 (跨盘)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🔧 处理选项</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item"><input type="checkbox" id="dryRunCheck"> 模拟运行</div>
+                    <div class="checkbox-item"><input type="checkbox" id="incrementalCheck" checked> 增量处理</div>
+                    <div class="checkbox-item"><input type="checkbox" id="downloadImagesCheck" checked> 下载图片</div>
+                </div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item"><input type="checkbox" id="addYearCheck" checked> 文件夹加年份</div>
+                    <div class="checkbox-item"><input type="checkbox" id="forceChineseCheck" checked> 强制中文名称</div>
+                </div>
+                <div class="field-row">
+                    <label>并发线程数</label>
+                    <input type="number" id="maxWorkersInput" min="1" max="10" value="3">
+                </div>
+                <div class="field-row">
+                    <label>最小文件大小(MB)</label>
+                    <input type="number" id="minFileSizeInput" min="0" value="0">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎞️ 视频扩展名</h3>
+                <input type="text" id="videoExtInput" style="width:100%;" placeholder=".mkv, .mp4, .avi ..." value=".mkv, .mp4, .avi, .ts, .m2ts, .mov, .wmv, .flv">
+                <h3 style="margin-top:15px;">🚫 忽略关键词</h3>
+                <input type="text" id="ignorePatternsInput" style="width:100%;" placeholder="sample, trailer, extra" value="sample, trailer, extra">
+            </div>
+        </div>
+
+        <div class="config-grid">
+            <div class="card api-section">
+                <h3>🤖 AI 解析设置</h3>
+                <div class="checkbox-item"><input type="checkbox" id="aiParserEnabledCheck"> 启用 AI 解析</div>
+                <div class="field-row"><label>提供商</label><select id="aiProviderSelect"><option>deepseek</option><option>openai</option><option>zhipu</option><option>qwen</option></select></div>
+                <div class="field-row"><label>模型</label><input type="text" id="aiModelInput" value="deepseek-chat"></div>
+                <div class="field-row"><label>API 地址</label><input type="text" id="aiBaseUrlInput" value="https://api.deepseek.com"></div>
+                <div class="field-row"><label>批次大小</label><input type="number" id="aiBatchSizeInput" value="50"></div>
+            </div>
+            <div class="card api-section">
+                <h3>✨ AI 简介润色</h3>
+                <div class="checkbox-item"><input type="checkbox" id="aiPlotEnhanceCheck"> 启用简介润色</div>
+                <div class="field-row"><label>温度</label><input type="number" id="plotTempInput" step="0.1" min="0" max="1" value="0.7"></div>
+                <div class="field-row"><label>最大 tokens</label><input type="number" id="plotTokensInput" value="500"></div>
+            </div>
+            <div class="card">
+                <h3>🔑 API 密钥</h3>
+                <div class="field-row"><label>TMDB API Key</label><input type="password" id="tmdbKeyInput" placeholder="必填"></div>
+                <div class="field-row"><label>AI API Key</label><input type="password" id="aiKeyInput" placeholder="可选"></div>
+                <div class="note">AI Key 同时用于解析和润色</div>
+                <h3 style="margin-top:15px;">🌐 TMDB 语言</h3>
+                <input type="text" id="tmdbLanguageInput" value="zh-CN" placeholder="zh-CN">
+            </div>
+        </div>
+    </form>
+
+    <!-- 目录浏览模态框 -->
+    <div id="browseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📁 选择文件夹</h3>
+                <span onclick="closeModal()" style="cursor:pointer;font-size:24px;">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="path-nav"><strong>📍</strong> <span id="currentPath">/</span></div>
+                <div style="margin-bottom:10px;">
+                    <button onclick="goUp()">⬆ 上一级</button>
+                    <button onclick="loadDrives()">💾 根目录</button>
+                    <button onclick="selectCurrentPath()" style="float:right;background:#28a745;">✅ 选择</button>
+                </div>
+                <ul class="dir-list" id="dirList"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 全局变量
+    let currentBrowsePath = '';
+    let targetField = '';
+    let statusInterval = null;
+    let configCache = {};
+    let fullStreamResult = '';
+
+    // 日志渲染
+    function renderLogs(logs) {
+        const logBox = document.getElementById('logBox');
+        logBox.innerHTML = '';
+        if (!logs || logs.length === 0) {
+            logBox.innerHTML = '<div style="color:#8a95a5;">✨ 准备就绪</div>';
+            return;
+        }
+        logs.forEach(item => {
+            const div = document.createElement('div');
+            let color = '#e3e8f0';
+            if (item.level === 'error') color = '#ff6b6b';
+            else if (item.level === 'success') color = '#51cf66';
+            else if (item.level === 'warning') color = '#ffd43b';
+            else if (item.level === 'progress') color = '#74c0fc';
+            div.style.color = color;
+            const time = item.time ? new Date(item.time * 1000).toLocaleTimeString() : '';
+            div.textContent = time ? `[${time}] ${item.msg}` : item.msg;
+            logBox.appendChild(div);
+        });
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // 初始化
+    loadConfig();
+    updateStatus();
+    startStatusPolling();
+
+    // ---------- 配置加载/保存 ----------
+    async function loadConfig() {
+        try {
+            const resp = await fetch('/api/config');
+            configCache = await resp.json();
+            populateForm(configCache);
+        } catch (e) {
+            alert('加载配置失败');
+        }
+    }
+
+    function populateForm(cfg) {
+        document.getElementById('sourceFoldersInput').value = (cfg.source_folders || []).join(', ');
+        document.getElementById('tvTargetFolderInput').value = cfg.tv_target_folder || '';
+        document.getElementById('movieTargetFolderInput').value = cfg.movie_target_folder || '';
+        document.getElementById('linkTypeSelect').value = cfg.link_type || 'hard';
+        document.getElementById('dryRunCheck').checked = !!cfg.dry_run;
+        document.getElementById('incrementalCheck').checked = cfg.incremental !== false;
+        document.getElementById('downloadImagesCheck').checked = cfg.download_images !== false;
+        document.getElementById('addYearCheck').checked = cfg.add_year_to_folder !== false;
+        document.getElementById('forceChineseCheck').checked = cfg.force_chinese_name !== false;
+        document.getElementById('maxWorkersInput').value = cfg.max_workers || 3;
+        document.getElementById('minFileSizeInput').value = cfg.min_file_size_mb || 0;
+        document.getElementById('videoExtInput').value = (cfg.video_extensions || ['.mkv','.mp4']).join(', ');
+        document.getElementById('ignorePatternsInput').value = (cfg.ignore_patterns || []).join(', ');
+        document.getElementById('tmdbKeyInput').value = cfg.tmdb_api?.api_key || '';
+        document.getElementById('tmdbLanguageInput').value = cfg.tmdb_api?.language || 'zh-CN';
+
+        const aiParser = cfg.ai_parser || {};
+        document.getElementById('aiParserEnabledCheck').checked = !!aiParser.enabled;
+        document.getElementById('aiProviderSelect').value = aiParser.provider || 'deepseek';
+        document.getElementById('aiModelInput').value = aiParser.model || 'deepseek-chat';
+        document.getElementById('aiBaseUrlInput').value = aiParser.base_url || 'https://api.deepseek.com';
+        document.getElementById('aiBatchSizeInput').value = aiParser.batch_size || 50;
+        document.getElementById('aiKeyInput').value = aiParser.api_key || '';
+
+        const aiPlot = cfg.ai_plot_enhance || {};
+        document.getElementById('aiPlotEnhanceCheck').checked = !!aiPlot.enabled;
+        document.getElementById('plotTempInput').value = aiPlot.temperature || 0.7;
+        document.getElementById('plotTokensInput').value = aiPlot.max_tokens || 500;
+    }
+
+    function collectConfigFromForm() {
+        const cfg = JSON.parse(JSON.stringify(configCache));
+        cfg.source_folders = document.getElementById('sourceFoldersInput').value.split(',').map(s => s.trim()).filter(s => s);
+        cfg.tv_target_folder = document.getElementById('tvTargetFolderInput').value.trim();
+        cfg.movie_target_folder = document.getElementById('movieTargetFolderInput').value.trim();
+        cfg.link_type = document.getElementById('linkTypeSelect').value;
+        cfg.dry_run = document.getElementById('dryRunCheck').checked;
+        cfg.incremental = document.getElementById('incrementalCheck').checked;
+        cfg.download_images = document.getElementById('downloadImagesCheck').checked;
+        cfg.add_year_to_folder = document.getElementById('addYearCheck').checked;
+        cfg.force_chinese_name = document.getElementById('forceChineseCheck').checked;
+        cfg.max_workers = parseInt(document.getElementById('maxWorkersInput').value) || 3;
+        cfg.min_file_size_mb = parseInt(document.getElementById('minFileSizeInput').value) || 0;
+        cfg.video_extensions = document.getElementById('videoExtInput').value.split(',').map(s => s.trim()).filter(s => s);
+        cfg.ignore_patterns = document.getElementById('ignorePatternsInput').value.split(',').map(s => s.trim()).filter(s => s);
+
+        cfg.tmdb_api = cfg.tmdb_api || {};
+        cfg.tmdb_api.api_key = document.getElementById('tmdbKeyInput').value.trim();
+        cfg.tmdb_api.language = document.getElementById('tmdbLanguageInput').value.trim();
+
+        const aiKey = document.getElementById('aiKeyInput').value.trim();
+        cfg.ai_parser = cfg.ai_parser || {};
+        cfg.ai_parser.enabled = document.getElementById('aiParserEnabledCheck').checked;
+        cfg.ai_parser.provider = document.getElementById('aiProviderSelect').value;
+        cfg.ai_parser.model = document.getElementById('aiModelInput').value;
+        cfg.ai_parser.base_url = document.getElementById('aiBaseUrlInput').value;
+        cfg.ai_parser.batch_size = parseInt(document.getElementById('aiBatchSizeInput').value) || 50;
+        cfg.ai_parser.api_key = aiKey;
+
+        cfg.ai_plot_enhance = cfg.ai_plot_enhance || {};
+        cfg.ai_plot_enhance.enabled = document.getElementById('aiPlotEnhanceCheck').checked;
+        cfg.ai_plot_enhance.temperature = parseFloat(document.getElementById('plotTempInput').value) || 0.7;
+        cfg.ai_plot_enhance.max_tokens = parseInt(document.getElementById('plotTokensInput').value) || 500;
+        cfg.ai_plot_enhance.api_key = aiKey;
+        return cfg;
+    }
+
+    async function saveConfig() {
+        try {
+            const cfg = collectConfigFromForm();
+            const resp = await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cfg)
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                alert('✅ 配置已保存');
+                await loadConfig();
+            } else {
+                alert('保存失败: ' + data.message);
+            }
+        } catch (e) {
+            alert('保存出错: ' + e.message);
+        }
+    }
+
+    // ---------- 任务控制 ----------
+    async function startTask() {
+        const runBtn = document.getElementById('runBtn');
+        runBtn.disabled = true;
+        document.getElementById('statusText').innerHTML = '⏳ 启动中...';
+        try {
+            const resp = await fetch('/api/run', { method: 'POST' });
+            const data = await resp.json();
+            if (data.status === 'started') {
+                document.getElementById('statusText').innerHTML = '🚀 运行中';
+                startStatusPolling();
+            } else {
+                alert('启动失败: ' + (data.message || '未知错误'));
+                runBtn.disabled = false;
+                document.getElementById('statusText').innerHTML = '⚪ 空闲';
+            }
+        } catch (e) {
+            alert('网络错误');
+            runBtn.disabled = false;
+        }
+    }
+
+    async function updateStatus() {
+        try {
+            const resp = await fetch('/api/status');
+            const data = await resp.json();
+            const fill = document.getElementById('progressFill');
+            const statusText = document.getElementById('statusText');
+            const runBtn = document.getElementById('runBtn');
+
+            if (data.total > 0) {
+                const pct = Math.round((data.progress / data.total) * 100);
+                fill.style.width = pct + '%';
+                fill.innerText = pct + '%';
+            } else {
+                fill.style.width = '0%';
+                fill.innerText = '0%';
+            }
+
+            statusText.innerHTML = data.running ? `🚀 运行中: ${data.message || ''}` : '⚪ 空闲';
+            runBtn.disabled = data.running;
+
+            if (!data.running && statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+
+            renderLogs(data.log || []);
+        } catch (e) {
+            console.error('状态更新失败', e);
+        }
+    }
+
+    function startStatusPolling() {
+        if (statusInterval) clearInterval(statusInterval);
+        statusInterval = setInterval(updateStatus, 1000);
+    }
+
+    async function viewFullLog() {
+        const resp = await fetch('/api/log');
+        const data = await resp.json();
+        const win = window.open("", "Log", "width=900,height=600");
+        win.document.write(`<pre style="background:#1a1e2b;color:#e3e8f0;padding:20px;white-space:pre-wrap;">${escapeHtml(data.log)}</pre>`);
+    }
+
+    // ---------- 目录浏览 ----------
+    function openBrowser(field) {
+        targetField = field;
+        document.getElementById('browseModal').style.display = 'block';
+        loadDrives();
+    }
+    function closeModal() { document.getElementById('browseModal').style.display = 'none'; }
+
+    async function loadDrives() {
+        const resp = await fetch('/api/drives');
+        const drives = await resp.json();
+        renderDirList(drives);
+        currentBrowsePath = '';
+        document.getElementById('currentPath').innerText = drives.length ? '请选择盘符/根目录' : '/';
+    }
+
+    async function browsePath(path) {
+        const resp = await fetch(`/api/browse?path=${encodeURIComponent(path)}`);
+        const data = await resp.json();
+        if (data.dirs) {
+            renderDirList(data.dirs);
+            currentBrowsePath = data.current;
+            document.getElementById('currentPath').innerText = data.current;
+        }
+    }
+
+    async function goUp() {
+        if (!currentBrowsePath) { loadDrives(); return; }
+        const resp = await fetch(`/api/browse?path=${encodeURIComponent(currentBrowsePath)}`);
+        const data = await resp.json();
+        if (data.parent) await browsePath(data.parent); else loadDrives();
+    }
+
+    function renderDirList(items) {
+        const list = document.getElementById('dirList');
+        list.innerHTML = '';
+        if (!items || items.length === 0) {
+            list.innerHTML = '<li style="padding:10px;color:#6c757d;">📭 空目录</li>';
+            return;
+        }
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="folder-icon">📁</span> ${escapeHtml(item.name)}`;
+            li.onclick = () => browsePath(item.path);
+            list.appendChild(li);
+        });
+    }
+
+    function selectCurrentPath() {
+        let path = currentBrowsePath;
+        if (!path) { alert('请先选择一个文件夹'); return; }
+        let inputId;
+        if (targetField === 'source') inputId = 'sourceFoldersInput';
+        else if (targetField === 'tv_target') inputId = 'tvTargetFolderInput';
+        else if (targetField === 'movie_target') inputId = 'movieTargetFolderInput';
+        else return;
+
+        const inp = document.getElementById(inputId);
+        if (targetField === 'source') {
+            let cur = inp.value.trim();
+            inp.value = cur ? (cur.endsWith(',') ? cur + path : cur + ', ' + path) : path;
+        } else {
+            inp.value = path;
+        }
+        closeModal();
+    }
+
+    function escapeHtml(text) {
+        if (!text) return text;
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ---------- 流式 AI 测试 ----------
+    function startStreamEnhance() {
+        const title = document.getElementById('testTitle').value.trim();
+        const plot = document.getElementById('testPlot').value.trim();
+        if (!title || !plot) { alert('请输入标题和简介'); return; }
+
+        const aiConfig = {
+            provider: document.getElementById('aiProviderSelect').value,
+            api_key: document.getElementById('aiKeyInput').value,
+            model: document.getElementById('aiModelInput').value,
+            base_url: document.getElementById('aiBaseUrlInput').value,
+            temperature: parseFloat(document.getElementById('plotTempInput').value) || 0.7,
+            max_tokens: parseInt(document.getElementById('plotTokensInput').value) || 500
+        };
+
+        fetchStream(title, plot, aiConfig);
+    }
+
+    async function fetchStream(title, plot, aiConfig) {
+        const outputDiv = document.getElementById('streamOutput');
+        outputDiv.innerHTML = '';
+        fullStreamResult = '';
+
+        try {
+            const resp = await fetch('/api/ai/stream_enhance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, original_plot: plot, ai_config: aiConfig })
+            });
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.content) {
+                                fullStreamResult += data.content;
+                                outputDiv.textContent = fullStreamResult;
+                            }
+                            if (data.error) {
+                                outputDiv.innerHTML = `<span style="color:#ff6b6b;">错误: ${data.error}</span>`;
+                                return;
+                            }
+                        } catch (e) {
+                            console.warn('解析流数据失败:', e);
+                        }
+                    }
+                }
+            }
+            // 流结束，文字已完整保留，无需额外操作
+        } catch (error) {
+            outputDiv.innerHTML = `<span style="color:#ff6b6b;">请求失败: ${error.message}</span>`;
+        }
+    }
+
+    function copyStreamResult() {
+        if (!fullStreamResult) {
+            alert('没有可复制的内容');
+            return;
+        }
+        navigator.clipboard?.writeText(fullStreamResult).then(() => alert('已复制到剪贴板'));
+    }
+
+    window.onclick = (e) => {
+        const modal = document.getElementById('browseModal');
+        if (e.target === modal) closeModal();
+    };
+</script>
+</body>
+</html>
