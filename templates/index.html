@@ -41,6 +41,8 @@
         button.secondary:hover { background: #545b62; }
         button.success { background: #28a745; }
         button.success:hover { background: #218838; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
         button.browse { background: #5a6d80; }
         .progress-bar {
             width: 100%; background: #e9ecef; border-radius: 30px;
@@ -200,7 +202,8 @@
 
     <div class="action-bar">
         <button id="runBtn" onclick="startTask()">▶ 开始处理</button>
-        <button class="secondary" onclick="location.reload()">🔄 刷新</button>
+        <button id="stopBtn" onclick="stopTask()" class="danger" disabled>⏹️ 停止任务</button>
+        <button class="secondary" onclick="refreshStatus()">🔄 刷新</button>
         <button class="success" onclick="saveConfig()">💾 保存配置</button>
         <button class="secondary" onclick="viewFullLog()">📄 完整日志</button>
     </div>
@@ -320,6 +323,9 @@
                 <input type="text" id="tmdbLanguageInput" value="zh-CN" placeholder="zh-CN">
             </div>
         </div>
+        <div class="note" style="margin-top: 10px; background: #fff3cd; padding: 8px; border-radius: 6px;">
+            💡 提示：修改配置后请点击「💾 保存配置」按钮，否则不会写入文件。
+        </div>
     </form>
 
     <!-- 目录浏览模态框 -->
@@ -334,7 +340,7 @@
                 <div style="margin-bottom:10px;">
                     <button onclick="goUp()">⬆ 上一级</button>
                     <button onclick="loadDrives()">💾 根目录</button>
-                    <button onclick="selectCurrentPath()" style="float:right;background:#28a745;">✅ 选择</button>
+                    <button onclick="selectCurrentPath()" style="float:right;background:#28a745;">✅ 选择此文件夹</button>
                 </div>
                 <ul class="dir-list" id="dirList"></ul>
             </div>
@@ -467,7 +473,7 @@
             });
             const data = await resp.json();
             if (data.status === 'success') {
-                alert('✅ 配置已保存');
+                alert('✅ 配置已保存到 auto_config.json');
                 await loadConfig();
             } else {
                 alert('保存失败: ' + data.message);
@@ -480,6 +486,7 @@
     // ---------- 任务控制 ----------
     async function startTask() {
         const runBtn = document.getElementById('runBtn');
+        const stopBtn = document.getElementById('stopBtn');
         runBtn.disabled = true;
         document.getElementById('statusText').innerHTML = '⏳ 启动中...';
         try {
@@ -487,6 +494,7 @@
             const data = await resp.json();
             if (data.status === 'started') {
                 document.getElementById('statusText').innerHTML = '🚀 运行中';
+                if (stopBtn) stopBtn.disabled = false;
                 startStatusPolling();
             } else {
                 alert('启动失败: ' + (data.message || '未知错误'));
@@ -499,6 +507,20 @@
         }
     }
 
+    async function stopTask() {
+        try {
+            const resp = await fetch('/api/stop', { method: 'POST' });
+            const data = await resp.json();
+            if (data.status === 'stopping') {
+                alert('正在停止任务...');
+            } else {
+                alert('停止失败: ' + (data.message || '未知错误'));
+            }
+        } catch (e) {
+            alert('网络错误');
+        }
+    }
+
     async function updateStatus() {
         try {
             const resp = await fetch('/api/status');
@@ -506,6 +528,7 @@
             const fill = document.getElementById('progressFill');
             const statusText = document.getElementById('statusText');
             const runBtn = document.getElementById('runBtn');
+            const stopBtn = document.getElementById('stopBtn');
 
             if (data.total > 0) {
                 const pct = Math.round((data.progress / data.total) * 100);
@@ -518,6 +541,7 @@
 
             statusText.innerHTML = data.running ? `🚀 运行中: ${data.message || ''}` : '⚪ 空闲';
             runBtn.disabled = data.running;
+            if (stopBtn) stopBtn.disabled = !data.running;
 
             if (!data.running && statusInterval) {
                 clearInterval(statusInterval);
@@ -535,6 +559,11 @@
         statusInterval = setInterval(updateStatus, 1000);
     }
 
+    async function refreshStatus() {
+        await updateStatus();
+        await loadConfig();
+    }
+
     async function viewFullLog() {
         const resp = await fetch('/api/log');
         const data = await resp.json();
@@ -542,7 +571,7 @@
         win.document.write(`<pre style="background:#1a1e2b;color:#e3e8f0;padding:20px;white-space:pre-wrap;">${escapeHtml(data.log)}</pre>`);
     }
 
-    // ---------- 目录浏览 ----------
+    // ---------- 目录浏览 (修复路径选择) ----------
     function openBrowser(field) {
         targetField = field;
         document.getElementById('browseModal').style.display = 'block';
@@ -565,6 +594,8 @@
             renderDirList(data.dirs);
             currentBrowsePath = data.current;
             document.getElementById('currentPath').innerText = data.current;
+        } else {
+            alert('无法浏览该目录，可能是权限不足或路径无效');
         }
     }
 
@@ -579,7 +610,7 @@
         const list = document.getElementById('dirList');
         list.innerHTML = '';
         if (!items || items.length === 0) {
-            list.innerHTML = '<li style="padding:10px;color:#6c757d;">📭 空目录</li>';
+            list.innerHTML = '<li style="padding:10px;color:#6c757d;">📭 空目录或无权限访问</li>';
             return;
         }
         items.forEach(item => {
@@ -592,19 +623,29 @@
 
     function selectCurrentPath() {
         let path = currentBrowsePath;
-        if (!path) { alert('请先选择一个文件夹'); return; }
+        if (!path) {
+            alert('请先点击一个文件夹进入，或点击“根目录”选择盘符');
+            return;
+        }
         let inputId;
-        if (targetField === 'source') inputId = 'sourceFoldersInput';
-        else if (targetField === 'tv_target') inputId = 'tvTargetFolderInput';
-        else if (targetField === 'movie_target') inputId = 'movieTargetFolderInput';
-        else return;
-
-        const inp = document.getElementById(inputId);
         if (targetField === 'source') {
-            let cur = inp.value.trim();
-            inp.value = cur ? (cur.endsWith(',') ? cur + path : cur + ', ' + path) : path;
-        } else {
-            inp.value = path;
+            inputId = 'sourceFoldersInput';
+            // 直接替换整个输入框内容（用户可手动追加多个路径）
+            document.getElementById(inputId).value = path;
+            alert(`✅ 源文件夹已设置为: ${path}\n（如需多个路径，请手动用逗号分隔）`);
+        }
+        else if (targetField === 'tv_target') {
+            inputId = 'tvTargetFolderInput';
+            document.getElementById(inputId).value = path;
+            alert(`✅ 剧集目标文件夹已设置为: ${path}`);
+        }
+        else if (targetField === 'movie_target') {
+            inputId = 'movieTargetFolderInput';
+            document.getElementById(inputId).value = path;
+            alert(`✅ 电影目标文件夹已设置为: ${path}`);
+        }
+        else {
+            return;
         }
         closeModal();
     }
@@ -676,7 +717,6 @@
                     }
                 }
             }
-            // 流结束，文字已完整保留，无需额外操作
         } catch (error) {
             outputDiv.innerHTML = `<span style="color:#ff6b6b;">请求失败: ${error.message}</span>`;
         }
