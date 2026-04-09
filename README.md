@@ -54,17 +54,25 @@
    ```bash
    git clone https://github.com/gegd19/emby-auto-processor.git
    cd emby-auto-processor
-2.  **安装依赖** 
+2.**创建并激活虚拟环境（推荐）**
+ ## Windows PowerShell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+## Linux / macOS
+python3 -m venv .venv
+source .venv/bin/activate
+3.  **安装依赖** 
    pip install -r requirements.txt
 
-3. **准备配置文件**
+4. **准备配置文件**
    # Windows PowerShell
 Copy-Item auto_config.example.json auto_config.json
 
-# Linux / macOS
+## Linux / macOS
 cp auto_config.example.json auto_config.json
  
-4. **编辑 auto_config.json**
+5. **编辑 auto_config.json**
 用文本编辑器打开 auto_config.json，填入：
 
 tmdb_api.api_key：你的 TMDB API 密钥（必填）
@@ -75,7 +83,7 @@ tv_target_folder / movie_target_folder：Emby 媒体库目录
 
 （可选）如需 AI 功能，填写 ai_parser.api_key 和 ai_plot_enhance.api_key，并将 enabled 设为 true
 
-5.**启动 Web 服务**
+6.**启动 Web 服务**
 
  python web_app.py
  
