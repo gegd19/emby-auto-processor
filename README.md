@@ -59,7 +59,7 @@
 
 3. **准备配置文件**
    cp auto_config.example.json auto_config.json
-  # 编辑 auto_config.json，填入你的 TMDB API Key 和文件夹路径
+  ## 编辑 auto_config.json，填入你的 TMDB API Key 和文件夹路径
 
 4.**启动 Web 服务**
 
