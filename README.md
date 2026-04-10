@@ -57,7 +57,7 @@
    cd emby-auto-processor
 2.**创建并激活虚拟环境（推荐）**
  ## Windows PowerShell
-     ```bash
+      ```bash
       python -m venv .venv
       
       cmd
@@ -66,7 +66,7 @@
 .venv\Scripts\Activate.ps1
 
 ## Linux / macOS
-    ```bash
+     ```bash
      python3 -m venv .venv
 
 
@@ -86,14 +86,14 @@
     Copy-Item auto_config.example.json auto_config.json
 
 # Linux / macOS
-    ```bash
-    cp auto_config.example.json auto_config.json
+     ```bash
+     cp auto_config.example.json auto_config.json
  
 5. **编辑 auto_config.json**
    
     用文本编辑器打开 auto_config.json，填入：
 
-    tmdb_api.api_key：你的 TMDB API 密钥（必填）
+     tmdb_api.api_key：你的 TMDB API 密钥（必填）
 
      source_folders：视频存放的源文件夹路径
 
@@ -102,7 +102,7 @@
 （可选）如需 AI 功能，填写 ai_parser.api_key 和 ai_plot_enhance.api_key，并将 enabled 设为 true
 
 6.**启动 Web 服务**
-    ```bash
+     ```bash
      python web_app.py
  
 访问 http://127.0.0.1:5000 
