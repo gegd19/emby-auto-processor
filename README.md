@@ -50,59 +50,24 @@
 - 可选：DeepSeek / OpenAI 等 API 密钥（用于 AI 增强功能）
 
 ## 🔧 安装与配置
-1. **克隆仓库**
-  ```bash
-   git clone https://github.com/gegd19/emby-auto-processor.git
-   
-   cd emby-auto-processor
-2.**创建并激活虚拟环境（推荐）**
- ## Windows PowerShell
-  ```bash
-      python -m venv .venv
-      cmd
-      venv\Scripts\Activate.ps1
 
+### 1. 克隆仓库
+```bash
+git clone https://github.com/gegd19/emby-auto-processor.git
+cd emby-auto-processor
+### 2.创建并激活虚拟环境（推荐
+## Windows PowerShell
+```bash
+python -m venv .venv
+cmd
+.venv\Scripts\Activate.ps1
 ## Linux / macOS
-  ```bash
-     python3 -m venv .venv
-     source .venv/bin/activate
-
-
-3.  **安装依赖**
-  ```bash
-       pip install -r requirements.txt
-
-4. **准备配置文件**
-
-
-   # Windows PowerShell
-  ```bash
-     Copy-Item auto_config.example.json auto_config.json
-
-# Linux / macOS
-  ```bash
-      cp auto_config.example.json auto_config.json
- 
-5. **编辑 auto_config.json**
-   
-    用文本编辑器打开 auto_config.json，填入：
-
-     tmdb_api.api_key：你的 TMDB API 密钥（必填）
-
-     source_folders：视频存放的源文件夹路径
-
-     tv_target_folder / movie_target_folder：Emby 媒体库目录
-
-（可选）如需 AI 功能，填写 ai_parser.api_key 和 ai_plot_enhance.api_key，并将 enabled 设为 true
-
-6.**启动 Web 服务**
-     ```bash
-     python web_app.py
- 
-访问 http://127.0.0.1:5000 
-       享受丝滑的视觉化操作！
-
-  💡  命令行模式：如果你不需要 Web 界面，可以直接运行 python emby_auto_processor.py --help 查看参数，或直接执行 python emby_auto_processor.py 开始处理。
+'''bash
+python3 -m venv .venv
+source .venv/bin/activate
+###3. 安装依赖
+'''bash
+pip install -r requirements.txt
 
 **⚙️ 配置亮点
 核心功能	配置项	说明
