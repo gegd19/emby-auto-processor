@@ -46,11 +46,12 @@ pip install -r requirements.txt
 > 这会自动安装所有必需的第三方库（如 requests、flask 等）。
 
 ### 4. 准备配置文件
-```bash
 # Windows PowerShell
+```bash
 Copy-Item auto_config.example.json auto_config.json
-
+```
 # Linux / macOS
+```bash
 cp auto_config.example.json auto_config.json
 ```
 
