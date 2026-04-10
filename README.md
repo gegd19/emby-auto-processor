@@ -68,8 +68,6 @@
 ## Linux / macOS
      ```bash
      python3 -m venv .venv
-
-
      source .venv/bin/activate
 
 
@@ -82,12 +80,12 @@
 
 
    # Windows PowerShell
-    ```bash
-    Copy-Item auto_config.example.json auto_config.json
+     ```bash
+     Copy-Item auto_config.example.json auto_config.json
 
 # Linux / macOS
-     ```bash
-     cp auto_config.example.json auto_config.json
+      ```bash
+      cp auto_config.example.json auto_config.json
  
 5. **编辑 auto_config.json**
    
