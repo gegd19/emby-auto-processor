@@ -87,9 +87,10 @@ python web_app.py
 ```
 成功启动后，终端会显示：
 ```
-* Running on http://127.0.0.1:5000
+ * Serving Flask app 'web_app'
+ * Debug mode: off
 ```
-用浏览器打开该地址，即可使用可视化界面。
+用浏览器打开 http://127.0.0.1:5000 即可使用可视化界面。
 
 ## 💡 命令行模式（备选）
 如果你不需要 Web 界面，可以直接运行核心处理脚本：
