@@ -51,36 +51,36 @@
 
 ## 🔧 安装与配置
 1. **克隆仓库**
- ```bash
+  ```bash
    git clone https://github.com/gegd19/emby-auto-processor.git
    
    cd emby-auto-processor
 2.**创建并激活虚拟环境（推荐）**
  ## Windows PowerShell
- ```bash
+  ```bash
       python -m venv .venv
       cmd
       venv\Scripts\Activate.ps1
 
 ## Linux / macOS
- ```bash
+  ```bash
      python3 -m venv .venv
      source .venv/bin/activate
 
 
 3.  **安装依赖**
- ```bash
+  ```bash
        pip install -r requirements.txt
 
 4. **准备配置文件**
 
 
    # Windows PowerShell
- ```bash
+  ```bash
      Copy-Item auto_config.example.json auto_config.json
 
 # Linux / macOS
- ```bash
+  ```bash
       cp auto_config.example.json auto_config.json
  
 5. **编辑 auto_config.json**
