@@ -1,53 +1,17 @@
-*Emby Auto Processor — 你的全自动 AI 媒体库管家*
+# 🚀 Emby Auto Processor 快速开始（注释版）
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20NAS-lightgrey)]()
-
-**告别手动整理文件的繁琐，让 AI 帮你打理一切。**
-
-还在为 PT 下载的电影、剧集文件名混乱而头疼？还在手动创建文件夹、重命名、刮削元数据？**Emby Auto Processor** 正是为你打造的终极解决方案。它不仅能精准识别电影和剧集，更能调用 AI 大模型改写简介，最后通过**硬链接**瞬间完成入库，**零空间占用，保种入库两不误**。
-
----
-
-** ✨ 为什么选择它？—— 三大核心优势 **
-
-** 🚀 创新性：AI 深度赋能，不只是重命名 **
-- **智能媒体识别**：内置 AI + 正则双引擎，自动判断文件是**电影**还是**剧集**，并提取准确名称、年份、季集号。告别复杂的命名规则。
-- **剧情简介润色**：接入 DeepSeek / OpenAI 等大模型，将 TMDB 的平淡简介改写为**悬念迭起、引人入胜**的文案。Web 界面支持**流式预览**，实时感受 AI 的文字魅力。
-- **流式交互体验**：首创在媒体整理工具中集成 SSE 流式传输，AI 改写过程逐字呈现，科技感拉满。
-
-## 🛠️ 实用性：一站式全自动闭环
-- **TMDB 无缝对接**：自动搜索并匹配 TMDB 官方数据，获取标准中文名、年份、简介、评分、演职员信息。
-- **元数据全生成**：自动生成 Emby / Jellyfin 完美兼容的 `tvshow.nfo`、`season.nfo`、`movie.nfo` 及单集 NFO 文件。
-- **海报图片下载**：自动下载剧集海报、背景图（fanart）以及每集的剧照，让媒体库不再单调。
-- **增量处理缓存**：记录每一个成功处理的文件，后续运行**秒级跳过**，只专注于新增内容。
-
-## 🎯 易用性：从命令行到可视化，总有一款适合你
-- **🌐 全功能 Web 控制面板**：
-  - **可视化配置**：所有设置项一目了然，勾勾选选即可完成配置，无需手写 JSON。
-  - **目录浏览**：点击按钮即可在服务器上选择文件夹，路径自动填入。
-  - **实时进度监控**：彩色日志流式输出，TMDB 搜索、图片下载、AI 调用过程**全透明**。
-- **⌨️ 命令行模式**：极客首选，一行命令即可静默运行，适合集成到自动化脚本或 NAS 任务计划中。
-- **💾 硬链接零空间**：采用文件系统级的硬链接（Hard Link），入库后的文件**不占用额外磁盘空间**，源文件可继续做种上传。
-
----
-
-## 📸 界面预览
-
-| 配置面板 | 实时日志与流式 AI 测试 |
-| :---: | :---: |
-| ![配置面板](https://github.com/user-attachments/assets/c8a32ac8-7ec6-43dd-926f-dab21f9fd7cf) | ![流式AI](https://github.com/user-attachments/assets/6754189d-f328-4069-8985-b6edbbec0fdf) |
-
----
-
-## 🚀 快速开始
+> 📌 本注释版保留了所有核心步骤，并添加了 **绿色说明块** 帮助你理解每一步的作用和注意事项。  
+> 你可以放心复制使用，注释不会影响实际命令的执行。
 
 ## 📋 环境要求
-- Python 3.8+
-- 网络连接（用于访问 TMDB 和 AI 接口）
-- 推荐：TMDB API 密钥（[免费申请](https://www.themoviedb.org/settings/api)）
-- 可选：DeepSeek / OpenAI 等 API 密钥（用于 AI 增强功能）
+
+- **Python 3.8+**  
+  > 检查方法：在终端输入 `python --version` 或 `python3 --version`
+- **网络连接**（用于访问 TMDB 和 AI 接口）
+- **推荐：TMDB API 密钥**  
+  > [点击免费申请](https://www.themoviedb.org/settings/api) → 注册账号 → 进入 API 页面申请开发者密钥
+- **可选：DeepSeek / OpenAI 等 API 密钥**  
+  > 用于 AI 增强功能（如智能解析剧集名、自动生成剧情简介）
 
 ## 🔧 安装与配置
 
@@ -55,19 +19,106 @@
 ```bash
 git clone https://github.com/gegd19/emby-auto-processor.git
 cd emby-auto-processor
-### 2.创建并激活虚拟环境（推荐
-## Windows PowerShell
+```
+> 💡 如果没有安装 Git，也可以直接下载 ZIP 包解压。
+
+### 2. 创建并激活虚拟环境（推荐）
+> **为什么需要虚拟环境？**  
+> 避免不同项目之间的 Python 包版本冲突。
+
+#### Windows PowerShell
 ```bash
-python -m venv .venv
-cmd
-.venv\Scripts\Activate.ps1
-## Linux / macOS
-'''bash
+python -m venv .venv          # 创建虚拟环境文件夹
+.venv\Scripts\Activate.ps1    # 激活（注意：若报错需先执行 Set-ExecutionPolicy RemoteSigned）
+```
+> ⚠️ 如果 PowerShell 禁止执行脚本，可以改用 CMD：  
+> `.venv\Scripts\activate.bat`
+
+#### Linux / macOS
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
-###3. 安装依赖
-'''bash
+```
+> 激活成功后，命令行提示符前会出现 `(.venv)` 字样。
+
+### 3. 安装依赖
+```bash
 pip install -r requirements.txt
+```
+> 这会自动安装所有必需的第三方库（如 requests、flask 等）。
+
+### 4. 准备配置文件
+```bash
+# Windows PowerShell
+Copy-Item auto_config.example.json auto_config.json
+
+# Linux / macOS
+cp auto_config.example.json auto_config.json
+```
+
+
+### 5. 编辑 `auto_config.json`
+用文本编辑器（如 VS Code、Notepad++、Sublime）打开 `auto_config.json`，填入以下内容：
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `tmdb_api.api_key` | **必填**。你的 TMDB API 密钥 | `"8f1e2d3c4b5a6..."` |
+| `source_folders` | 存放未处理视频的源文件夹路径（支持多个） | `["D:/downloads", "/home/user/videos"]` |
+| `tv_target_folder` | Emby 的电视剧媒体库目录 | `"E:/emby/TV Shows"` |
+| `movie_target_folder` | Emby 的电影媒体库目录 | `"E:/emby/Movies"` |
+
+**AI 功能（可选）**  
+如需使用 AI 解析或剧情增强，将以下字段的 `enabled` 改为 `true`，并填写对应的 `api_key`：
+```json
+"ai_parser": {
+    "enabled": true,
+    "api_key": "sk-xxxxx",
+    "model": "deepseek-chat"
+},
+"ai_plot_enhance": {
+    "enabled": true,
+    "api_key": "sk-xxxxx"
+}
+```
+> 🔐 请妥善保管 API 密钥，不要上传到公开代码仓库。
+
+### 6. 启动 Web 服务
+```bash
+python web_app.py
+```
+成功启动后，终端会显示：
+```
+* Running on http://127.0.0.1:5000
+```
+用浏览器打开该地址，即可使用可视化界面。
+
+## 💡 命令行模式（备选）
+如果你不需要 Web 界面，可以直接运行核心处理脚本：
+```bash
+# 查看所有命令行参数
+python emby_auto_processor.py --help
+
+# 使用默认配置开始处理
+python emby_auto_processor.py
+```
+> 命令行模式适合定时任务（如配合 cron 或任务计划程序）。
+
+---
+
+## ✅ 验证是否成功
+1. 访问 `http://127.0.0.1:5000` 能看到界面 → Web 服务正常  
+2. 点击“开始处理”后，Emby 媒体库中出现整理好的剧集/电影 → 配置正确  
+
+## ❓ 常见问题
+- **激活虚拟环境时提示“无法加载脚本”**  
+  以管理员身份运行 PowerShell，执行 `Set-ExecutionPolicy RemoteSigned` 后重试。
+- **TMDB 识别不准确**  
+  在 `auto_config.json` 中调整 `tmdb_api.language` 为 `"zh-CN"` 可获得中文结果。
+- **AI 功能无反应**  
+  检查 API 密钥是否有效、账户是否有余额（DeepSeek 等需要付费）。
+
+---
+
 
 **⚙️ 配置亮点
 核心功能	配置项	说明
