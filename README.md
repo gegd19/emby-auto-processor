@@ -57,7 +57,7 @@
    cd emby-auto-processor
 2.**创建并激活虚拟环境（推荐）**
  ## Windows PowerShell
-      ```bash
+ ```bash
       python -m venv .venv
       
       cmd
